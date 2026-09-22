@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thursday comms desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Archivo+Narrow:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#15171C; --ink-2:#5A6070; --ink-3:#9AA1B0;
+  --paper:#E9EBEF; --panel:#FFFFFF; --line:#D2D6DE; --line-2:#E4E7EC;
+  --live:#D62828; --live-bg:#FBE7E7;
+  --ready:#1B8A5A; --ready-bg:#E4F3EC;
+  --signal:#2F4FCD; --signal-bg:#E6EAF9;
+  --custom:#A85B00; --custom-bg:#FBF0E0;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Archivo',system-ui,sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:26px 20px 80px}
+
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;padding-bottom:14px;border-bottom:2px solid var(--ink)}
+h1{font-size:25px;font-weight:600;margin:0;letter-spacing:-0.01em}
+.sub{font-family:'Archivo Narrow',sans-serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-2);margin:2px 0 0}
+.master{font-family:'Archivo Narrow',sans-serif;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;padding:6px 14px;border-radius:2px;font-weight:600}
+.m-ok{background:var(--ready-bg);color:var(--ready);border:1px solid var(--ready)}
+.m-no{background:var(--live-bg);color:var(--live);border:1px solid var(--live)}
+
+.eyebrow{font-family:'Archivo Narrow',sans-serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-2);font-weight:600;margin:30px 0 8px;display:flex;align-items:center;gap:10px}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+.hint{font-size:13.5px;color:var(--ink-2);margin:0 0 14px;max-width:78ch}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:16px 18px;margin-bottom:14px}
+.panel.rail{border-left:13px solid var(--ink-3)}
+.panel.rail.ready{border-left-color:var(--ready)}
+.panel.rail.hold{border-left-color:var(--live)}
+
+.phead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.pname{font-size:17px;font-weight:600;margin:0}
+.pto{font-family:'Archivo Narrow',sans-serif;font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-2);margin:1px 0 0}
+.tally{font-family:'Archivo Narrow',sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;padding:3px 9px;border-radius:2px}
+.t-ok{background:var(--ready-bg);color:var(--ready)}
+.t-no{background:var(--live-bg);color:var(--live)}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media(max-width:940px){.grid2{grid-template-columns:1fr}}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:11px 16px}
+.subhead{font-family:'Archivo Narrow',sans-serif;font-size:11px;letter-spacing:0.11em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:14px 0 6px;grid-column:1/-1}
+
+label.f{display:block;min-width:0}
+label.f>.lab{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:'Archivo Narrow',sans-serif;font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-2);font-weight:600;margin-bottom:3px}
+label.f.missing>.lab{color:var(--live)}
+label.f.missing input,label.f.missing textarea{border-color:var(--live);background:var(--live-bg)}
+label.f.custom>.lab{color:var(--custom)}
+label.f.custom input,label.f.custom textarea{border-color:var(--custom);background:var(--custom-bg)}
+.uses{display:inline-flex;gap:3px}
+.uses b{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--signal-bg);color:var(--signal);width:15px;height:15px;display:grid;place-items:center;border-radius:2px;font-weight:500}
+.state{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0;text-transform:none;padding:1px 5px;border-radius:2px;background:var(--signal-bg);color:var(--signal)}
+.state.is-custom{background:var(--custom-bg);color:var(--custom)}
+.wide{grid-column:1/-1}
+
+/* flag rows */
+.flagrow{border:1px solid var(--line-2);border-radius:3px;padding:9px 11px;margin-bottom:8px;background:#FCFCFD}
+.flagrow.off{opacity:.5;background:#F4F5F8}
+.flagrow.needs{border-color:var(--live);background:#FEF6F6}
+.fr-top{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.fr-tog{flex:0 0 auto;width:22px;height:22px;display:grid;place-items:center;border:1px solid var(--line);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;line-height:1;padding:0;color:transparent}
+.fr-tog.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.fr-name{flex:1 1 auto;min-width:0;font-family:'Archivo Narrow',sans-serif !important;font-size:12.5px !important;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;padding:4px 7px !important}
+.fr-tri{flex:0 0 auto;font-size:10px;letter-spacing:0;text-transform:none;padding:3px 7px;border:1px solid var(--line);border-radius:3px;background:#F4F5F8;color:var(--ink-3);cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:500}
+.fr-tri.on{background:var(--live-bg);border-color:var(--live);color:var(--live)}
+.fr-ord{flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-3);width:14px;text-align:right}
+
+.picks{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 5px}
+.pick{font-family:'Archivo Narrow',sans-serif;font-size:11px;letter-spacing:0.05em;text-transform:uppercase;font-weight:600;padding:3px 9px;border:1px solid var(--line);border-radius:11px;background:#F4F5F8;color:var(--ink-2);cursor:pointer}
+.pick:hover{border-color:var(--ink-3);background:#EDEFF3}
+.pick.sel{background:var(--ink);border-color:var(--ink);color:#fff}
+.pick:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+input[type=text],textarea{width:100%;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;line-height:1.6;color:var(--ink);background:#FBFBFC;border:1px solid var(--line);border-radius:2px;padding:8px 10px}
+textarea{resize:vertical;min-height:64px}
+input:focus,textarea:focus{outline:2px solid var(--signal);outline-offset:1px;background:#fff}
+input::placeholder,textarea::placeholder{color:var(--ink-3)}
+
+.blocks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:13px;padding-bottom:12px;border-bottom:1px solid var(--line-2)}
+.blk{font-family:'Archivo Narrow',sans-serif;font-size:11.5px;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;padding:4px 10px;border:1px solid var(--line);border-radius:2px;background:#F4F5F8;color:var(--ink-3);cursor:pointer;user-select:none}
+.blk.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.blk.locked.on{background:#3A4050;border-color:#3A4050}
+.blk:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+.col-h{font-family:'Archivo Narrow',sans-serif;font-size:11.5px;letter-spacing:0.11em;text-transform:uppercase;color:var(--ink-2);font-weight:600;margin:0 0 6px}
+.prev{background:#fff;border:1px solid var(--line);border-radius:2px;padding:14px 16px;min-height:180px;overflow-wrap:break-word}
+.prev.sms{font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:pre-wrap;line-height:1.65}
+.prev.mail{font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5}
+.prev.mail ul{padding-left:22px;margin:14px 0}
+.prev.mail li{margin-bottom:3px}
+.prev.mail a{color:#1155cc}
+.subline{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-2);margin:0 0 8px;padding:5px 8px;background:#F4F5F8;border-radius:2px;overflow-wrap:break-word}
+
+button{font-family:'Archivo Narrow',sans-serif;font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;background:var(--ink);color:#fff;border:1px solid var(--ink);border-radius:2px;padding:6px 13px;cursor:pointer}
+button:hover{background:#000}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button.ghost:hover{background:var(--paper);border-color:var(--ink-3)}
+button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+.miss{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--live);margin:9px 0 0}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+code.k{font-family:'JetBrains Mono',monospace;background:#DFE3EA;padding:1px 5px;border-radius:2px;font-size:12.5px}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-2);max-width:80ch}
+@media(prefers-reduced-motion:no-preference){.panel{transition:border-left-color .18s ease}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>Thursday comms desk</h1>
+    <p class="sub">Service flags &middot; Production email &middot; Weekend experience</p>
+  </div>
+  <div id="master" class="master m-no">Checking</div>
+</header>
+
+<p class="eyebrow">Shared facts — the default for every communication</p>
+<p class="hint">These feed more than one message; the chips show which. Each communication below has its own copy — leave it blank to use the value here, or type in one to change it for that message only.</p>
+<div class="panel"><div id="shared" class="fields"></div></div>
+
+<div id="comms"></div>
+
+<div class="toolbar">
+  <button class="ghost" id="clear">Clear this week</button>
+  <button class="ghost" id="demo">Reset to templates</button>
+</div>
+
+<footer>
+  <p>In the flags, <code class="k">{{time}}</code> pulls the pastoral moment time from the shared panel, so it stays matched to the production email. Wrap text in <code class="k">**double asterisks**</code> inside any email field for bold italic. Copy on the two emails carries formatting into Gmail; the flags copy is plain text for your phone.</p>
+  <p>Nothing is saved anywhere. Keep this file somewhere you'll find it and open it each Thursday.</p>
+</footer>
+
+</div>
+
+<script>
+const V = {};
+
+/* ---------- Service flags: ordered, every flag editable ---------- */
+
+const FLAGS = [
+  {
+    id:'gs', name:'Guest Services', on:false, tri:true,
+    body:'Guest Services will be passing out the regular sermon notes handout & a CFM Flyer, both will be ready at pickup for you.',
+    presets:[
+      {n:'Flyer + notes', t:'Guest Services will be passing out the regular sermon notes handout & a CFM Flyer, both will be ready at pickup for you.'},
+      {n:'Notes only', t:'Guest Services will be passing out the regular sermon notes handout, ready at pickup for you.'},
+      {n:'Blank', t:''}
+    ]
+  },
+  {
+    id:'cw', name:'Call to Worship', on:true,
+    body:'\u201cDuring\u201d the countdown, hosts will come up and lead a call to worship and pray as the band plays behind them.',
+    presets:[
+      {n:'During countdown', t:'\u201cDuring\u201d the countdown, hosts will come up and lead a call to worship and pray as the band plays behind them.'},
+      {n:'After countdown', t:'\u201cAfter\u201d the countdown, hosts will come up and lead a call to worship and pray before the band comes in.'},
+      {n:'Blank', t:''}
+    ]
+  },
+  {
+    id:'wel', name:'Welcome', on:true,
+    body:'CPs/hosts will come up, introduce themselves and do a brief welcome before going into the Pastoral Moment.',
+    presets:[
+      {n:'Brief welcome', t:'CPs/hosts will come up, introduce themselves and do a brief welcome before going into the Pastoral Moment.'},
+      {n:'Welcome + first time guests', t:'CPs/hosts will come up, introduce themselves and welcome the room. Take a moment to acknowledge first time guests and point them to Next Steps after service.'},
+      {n:'Welcome out of video', t:'CPs/hosts will transition naturally out of the video, introduce themselves and do a brief welcome. Keep it tight so the moment stays cohesive.'},
+      {n:'Welcome + prayer', t:'CPs/hosts will come up, introduce themselves and do a brief welcome, then pray over the room before going into the Pastoral Moment.'},
+      {n:'Blank', t:''}
+    ]
+  },
+  {
+    id:'pm', name:'Pastoral Moment', on:true,
+    body:'CPs/hosts will have {{time}} for the Pastoral Moment here. They\u2019ll be transitioning naturally out of worship, introduce themselves, then share about Wednesday Family night.',
+    presets:[
+      {n:'Rooted / small groups', t:'CPs/hosts will come up and have {{time}} for the Pastoral Moment here. They\u2019ll be transitioning naturally out of worship, introduce themselves, then share about Wednesday Family night (have your Rooted small group leaders come up stage). After this, lead into Rooted and celebrate and highlight them so congregation knows who to look for after service. Once you\u2019re done have the congregation give it up for the leaders as they exit stage. Next you\u2019ll read 1 Corinthians 12:12, 26 and emphasize the importance of community and being in a small group. Then you\u2019ll land with how ongoing generosity supports small groups. After you pray, lead us back into worship!'},
+      {n:'Special offering', t:'CPs/hosts will come up and have {{time}} for the Pastoral Moment. They\u2019ll be transitioning naturally out of CFM WMFK video. Do brief welcome and then you\u2019ll go into establishing where we currently are with the special offering, you\u2019ll have slides for support highlighting where we currently are and how much more we need to go. Don\u2019t forget to push the importance of no child going hungry and how the congregation can play a vital role in doing that.'},
+      {n:'Vision Night', t:'CPs/hosts will have {{time}} for the Pastoral Moment. Celebrate 100 years of what God has done and what we\u2019re praying He\u2019ll do in the next 100. Walk the night: vendors and refreshments at 6pm, doors at 7:15pm, worship, Pastor Omar live, and BIG announcements \u2014 plus the exclusive merch made JUST for Vision Night after service. Mark calendars and bring the whole family. Childcare is limited and registration only \u2014 disc, QR code, or cfmiami.org/visionnight. Land with the other dates.'},
+      {n:'CP Prayer', t:'CPs will have {{time}} during worship. CP comes up and takes 1:00 to set the moment up, anchoring it in \u201cFor my house shall be called a house of prayer for all peoples.\u201d Isaiah 56:7 (ESV), then leads people to pray over whatever is on the congregation\u2019s heart. Congregation prays for 1:30 while the band plays. CP comes back in and prays out the last :30 to close the moment, then transition back into worship low.'},
+      {n:'Blank', t:''}
+    ]
+  },
+  {
+    id:'gen', name:'Generosity', on:false,
+    body:'As always remember to really distinguish between the special offering and tithe/generosity moment\u2026 make sure it\u2019s very evident to the congregation. Then you\u2019ll land with how ongoing generosity supports the church. After you pray, lead us back into worship.',
+    presets:[
+      {n:'Distinguish offering', t:'As always remember to really distinguish between the special offering and tithe/generosity moment\u2026 make sure it\u2019s very evident to the congregation. Then you\u2019ll land with how ongoing generosity supports the church and CFM operating to serve the community. After you pray, lead us back into worship.'},
+      {n:'Vision Night', t:'This is possible and the future of CF is possible because of their giving. Generosity is an act of faith, but not a blind faith \u2014 we give believing and knowing the Lord uses our blessings to bless others and push back the gates of hell in Miami. Land with how their generosity saves lives with the power of the gospel. Ways to Give is up. After you pray, lead us back into worship \u2014 reflect on how the Lord has been with us and has never forsaken us.'},
+      {n:'Supports small groups', t:'Land with how ongoing generosity supports small groups and the ministry of the church. After you pray, lead us back into worship!'},
+      {n:'Blank', t:''}
+    ]
+  },
+  {
+    id:'ee', name:'English Sermon Ending', on:true,
+    body:'Pastor Omar will be ending with \u201craise your hands\u201d invitation and then hand off for CPs to close out local.',
+    presets:[
+      {n:'Raise hands \u2192 CPs', t:'Pastor Omar will be ending with \u201craise your hands\u201d invitation and then hand off for CPs to close out local.'},
+      {n:'Raise hands \u2192 video', t:'Pastor Omar will be ending with \u201craise your hands\u201d invitation and then kick to the announcement video.'},
+      {n:'CPs lead into video', t:'CPs will end by leading into the last announcement video, then take over after the video to close out.'},
+      {n:'Blank', t:''}
+    ]
+  },
+  {
+    id:'se', name:'Spanish Sermon Ending', on:true,
+    body:'Pastor Pe\u00f1a ended by praying and handing off to hosts to dismiss.',
+    presets:[
+      {n:'Pray \u2192 hosts', t:'Pastor Pe\u00f1a ended by praying and handing off to hosts to dismiss.'},
+      {n:'Pray \u2192 video', t:'Pastor Pe\u00f1a ended by praying and kicking it to the announcement video.'},
+      {n:'Blank', t:''}
+    ]
+  },
+  {
+    id:'dis', name:'Dismissal', on:true, shared:'dismissal',
+    body:'',
+    presets:[]
+  }
+];
+
+const PRESETS = {};
+FLAGS.forEach(function(f){ if (f.presets && f.presets.length) PRESETS['fb_' + f.id] = f.presets; });
+
+const SHARED = [
+  {k:'date',      l:'Service date',         uses:[2,3], ph:'Month Day, Year'},
+  {k:'englishSet',l:'English set',          uses:[2,3], ph:'I Believe, The Blood, Center'},
+  {k:'spanishSet',l:'Spanish set',          uses:[2,3], ph:'Todo Lo Haces Bien, The Blood, Center'},
+  {k:'speaker',   l:'Speaker',              uses:[2,3], ph:'Speaker names'},
+  {k:'pastoral',  l:'Pastoral moment time', uses:[1,2], ph:'3:00'},
+  {k:'dismissal', l:'Dismissal',            uses:[1,3], ph:'Campus Specific Fall Service Times, Back To School Bash & next weekend.', big:true}
+];
+const SHAREDKEYS = {};
+SHARED.forEach(function(f){ SHAREDKEYS[f.k] = f; });
+
+const COMMS = [
+  {
+    n:2, name:'Production email', to:'Gmail to Production', kind:'mail',
+    over:['date','englishSet','spanishSet','speaker','pastoral'],
+    subject:function(){ return 'Production Email for ' + (R(2,'date') || '[date]'); },
+    fields:[
+      {k:'g_intro',  l:'Opening line',      ph:'Hey Team, here\u2019s the flow for the weekend:', big:true},
+      {k:'g_host',   l:'Hosting notes',     ph:'Remember this moment should feel cohesive\u2026 **Stream will open\u2026**', big:true},
+      {k:'g_engWor', l:'English worship',   ph:'P2P will be Female led'},
+      {k:'g_msgEnd', l:'Message ending',    ph:'CP\u2019s will end by leading into the last announcement video\u2026', big:true},
+      {k:'g_audio',  l:'Audio for ending',  ph:'Keys will play under the end of the Campus Pastor\u2019s\u2026', big:true},
+      {k:'g_wed',    l:'Wednesday on call', ph:'Name'},
+      {k:'g_thu',    l:'Thursday on call',  ph:'Names'},
+      {k:'g_close',  l:'Closing line',      ph:'Attached are both PDF masterflows\u2026', big:true}
+    ],
+    blocks:[
+      {id:'es',  l:'English set', on:true},
+      {id:'ss',  l:'Spanish set', on:true},
+      {id:'host',l:'Hosting', on:true},
+      {id:'ew',  l:'English worship', on:true},
+      {id:'sp',  l:'Speaker', on:true},
+      {id:'me',  l:'Message ending', on:true},
+      {id:'au',  l:'Audio for ending', on:true},
+      {id:'ts',  l:'Tech support \u00b7 standing', on:true, locked:true}
+    ],
+    needs:{es:['englishSet'], ss:['spanishSet'], host:['pastoral','g_host'], ew:['g_engWor'], sp:['speaker'], me:['g_msgEnd'], au:['g_audio'], ts:['g_wed','g_thu']},
+    always:['g_intro','g_close','date']
+  },
+  {
+    n:3, name:'Weekend experience', to:'Gmail to Weekend', kind:'mail',
+    over:['date','englishSet','spanishSet','speaker','dismissal'],
+    subject:function(){ return 'Weekend Experience // ' + (R(3,'date') || '[date]'); },
+    fields:[
+      {k:'w_intro', l:'Opening line',        ph:'Hey Team, below are some details\u2026', big:true},
+      {k:'w_gen',   l:'Generosity',          ph:'CFM WMFK Offering'},
+      {k:'w_ann',   l:'Announcement',        ph:'CFM WMFK Offering Testimony Video'},
+      {k:'w_engMid',l:'English middle song', ph:'The Truth'},
+      {k:'w_spaMid',l:'Spanish middle song', ph:'Cristo Me Ha Sanado'},
+      {k:'w_title', l:'Message title',       ph:'Message title'},
+      {k:'w_pass',  l:'Passage',             ph:'Passage'},
+      {k:'w_blurb', l:'Blurb',               ph:'Message blurb', big:true},
+      {k:'w_close', l:'Closing line',        ph:'Let\u2019s Go!'}
+    ],
+    blocks:[
+      {id:'es', l:'English set', on:true},
+      {id:'ss', l:'Spanish set', on:true},
+      {id:'gen',l:'Generosity', on:true},
+      {id:'ann',l:'Announcement', on:true},
+      {id:'em', l:'English middle song', on:true},
+      {id:'sm', l:'Spanish middle song', on:true},
+      {id:'sp', l:'Speaker', on:true},
+      {id:'msg',l:'Message title // passage // blurb', on:true},
+      {id:'dis',l:'Dismissal', on:true}
+    ],
+    needs:{es:['englishSet'], ss:['spanishSet'], gen:['w_gen'], ann:['w_ann'], em:['w_engMid'], sm:['w_spaMid'], sp:['speaker'], msg:['w_title','w_pass','w_blurb'], dis:['dismissal']},
+    always:['w_intro','w_close','date']
+  }
+];
+
+const FON = {};
+const FTRI = {};
+FLAGS.forEach(function(f){ FON[f.id] = f.on; FTRI[f.id] = !!f.tri; });
+
+const ON = {};
+COMMS.forEach(function(c){ ON[c.n] = {}; c.blocks.forEach(function(b){ ON[c.n][b.id] = b.on; }); });
+
+const LABELS = {};
+SHARED.forEach(function(f){ LABELS[f.k] = f.l; });
+COMMS.forEach(function(c){ c.fields.forEach(function(f){ LABELS[f.k] = f.l; }); });
+FLAGS.forEach(function(f){ LABELS['fb_' + f.id] = f.name; });
+
+function val(k){ return (V[k] || '').trim(); }
+function ov(n,k){ return 'o' + n + '_' + k; }
+function R(n,k){
+  if (!SHAREDKEYS[k]) return val(k);
+  return val(ov(n,k)) || val(k);
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function em(s){ return esc(s).replace(/\*\*([\s\S]+?)\*\*/g,'<b><i>$1</i></b>'); }
+function nl2br(s){ return s.replace(/\n/g,'<br>'); }
+function fillTime(s){ return s.replace(/\{\{\s*time\s*\}\}/g, R(1,'pastoral') || '[time]'); }
+
+function makeField(cfg, host){
+  const lab = document.createElement('label');
+  lab.className = 'f' + (cfg.big ? ' wide' : '');
+  lab.dataset.k = cfg.key;
+  if (cfg.overrideOf) lab.dataset.src = cfg.overrideOf;
+  const chips = cfg.uses ? '<span class="uses">' + cfg.uses.map(function(n){ return '<b>' + n + '</b>'; }).join('') + '</span>' : '';
+  const state = cfg.overrideOf ? '<span class="state">shared</span>' : '';
+  lab.innerHTML = '<span class="lab">' + cfg.l + chips + state + '</span>';
+  const el = document.createElement(cfg.big ? 'textarea' : 'input');
+  if (!cfg.big) el.type = 'text';
+  el.placeholder = cfg.ph || '';
+  el.dataset.k = cfg.key;
+  el.value = V[cfg.key] || '';
+  el.spellcheck = false;
+  el.addEventListener('input', function(e){ V[cfg.key] = e.target.value; render(); });
+  lab.appendChild(el);
+  host.appendChild(lab);
+}
+
+/* shared panel */
+SHARED.forEach(function(f){
+  makeField({key:f.k, l:f.l, ph:f.ph, big:f.big, uses:f.uses}, document.getElementById('shared'));
+});
+
+/* ---------- panel 1: flags ---------- */
+const p1 = document.createElement('div');
+p1.className = 'panel rail';
+p1.id = 'p1';
+p1.innerHTML =
+  '<div class="phead"><div><p class="pname">1 \u2014 Service flags</p>' +
+  '<p class="pto">Text message to pastors</p></div>' +
+  '<div style="display:flex;align-items:center;gap:8px">' +
+  '<span class="tally t-no" id="tal1">Hold</span>' +
+  '<button data-copy="1">Copy message</button></div></div>' +
+  '<div class="grid2"><div>' +
+  '<p class="col-h">Greeting</p><div class="fields" id="fld1head"></div>' +
+  '<p class="col-h" style="margin-top:14px">Flags \u2014 in send order</p><div id="flagrows"></div>' +
+  '<p class="col-h" style="margin-top:14px">Closing</p><div class="fields" id="fld1foot"></div>' +
+  '<p class="subhead" style="margin-top:14px">Shared fields \u2014 blank uses the value up top</p>' +
+  '<div class="fields" id="fld1over"></div>' +
+  '</div><div><p class="col-h">Ready to send</p>' +
+  '<div class="prev sms" id="out1"></div></div></div>' +
+  '<p class="miss" id="mis1"></p>';
+document.getElementById('comms').appendChild(p1);
+
+makeField({key:'f_greet', l:'Greeting', ph:'Good Afternoon Pastors, Here are the flags for this Sunday:', big:true}, document.getElementById('fld1head'));
+makeField({key:'f_close', l:'Closing', ph:'Email has been sent and includes the verbiage\u2026', big:true}, document.getElementById('fld1foot'));
+
+const rowHost = document.getElementById('flagrows');
+FLAGS.forEach(function(f, i){
+  const row = document.createElement('div');
+  row.className = 'flagrow';
+  row.dataset.fid = f.id;
+
+  const top = document.createElement('div');
+  top.className = 'fr-top';
+
+  const ord = document.createElement('span');
+  ord.className = 'fr-ord';
+  ord.textContent = (i + 1);
+  top.appendChild(ord);
+
+  const tog = document.createElement('button');
+  tog.type = 'button';
+  tog.className = 'fr-tog' + (FON[f.id] ? ' on' : '');
+  tog.textContent = '\u2713';
+  tog.title = 'Include this flag';
+  tog.setAttribute('aria-label', 'Include ' + f.name);
+  tog.setAttribute('aria-pressed', FON[f.id] ? 'true' : 'false');
+  tog.addEventListener('click', function(){
+    FON[f.id] = !FON[f.id];
+    tog.classList.toggle('on', FON[f.id]);
+    tog.setAttribute('aria-pressed', FON[f.id] ? 'true' : 'false');
+    render();
+  });
+  top.appendChild(tog);
+
+  const nm = document.createElement('input');
+  nm.type = 'text';
+  nm.className = 'fr-name';
+  nm.dataset.k = 'fn_' + f.id;
+  nm.value = V['fn_' + f.id] || '';
+  nm.placeholder = f.name;
+  nm.spellcheck = false;
+  nm.setAttribute('aria-label', f.name + ' flag label');
+  nm.addEventListener('input', function(e){ V['fn_' + f.id] = e.target.value; render(); });
+  top.appendChild(nm);
+
+  const tri = document.createElement('button');
+  tri.type = 'button';
+  tri.className = 'fr-tri' + (FTRI[f.id] ? ' on' : '');
+  tri.textContent = '\u{1F6A9}\u00d73';
+  tri.title = 'Triple flag for priority';
+  tri.setAttribute('aria-pressed', FTRI[f.id] ? 'true' : 'false');
+  tri.addEventListener('click', function(){
+    FTRI[f.id] = !FTRI[f.id];
+    tri.classList.toggle('on', FTRI[f.id]);
+    tri.setAttribute('aria-pressed', FTRI[f.id] ? 'true' : 'false');
+    render();
+  });
+  top.appendChild(tri);
+
+  row.appendChild(top);
+
+  if (f.presets && f.presets.length){
+    const picks = document.createElement('div');
+    picks.className = 'picks';
+    picks.dataset.for = 'fb_' + f.id;
+    f.presets.forEach(function(p){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pick';
+      b.textContent = p.n;
+      b.dataset.text = p.t;
+      b.addEventListener('click', function(){
+        V['fb_' + f.id] = p.t;
+        const ta = row.querySelector('textarea');
+        if (ta) ta.value = p.t;
+        render();
+      });
+      picks.appendChild(b);
+    });
+    row.appendChild(picks);
+  }
+
+  const ta = document.createElement('textarea');
+  ta.dataset.k = 'fb_' + f.id;
+  ta.value = V['fb_' + f.id] || '';
+  ta.spellcheck = false;
+  ta.setAttribute('aria-label', f.name + ' flag text');
+  ta.placeholder = f.shared ? '\u2014 uses the shared value \u2014' : (f.body || '');
+  ta.addEventListener('input', function(e){ V['fb_' + f.id] = e.target.value; render(); });
+  row.appendChild(ta);
+
+  rowHost.appendChild(row);
+});
+
+['pastoral','dismissal'].forEach(function(k){
+  const s = SHAREDKEYS[k];
+  makeField({key:ov(1,k), l:s.l, ph:'', big:s.big, overrideOf:k}, document.getElementById('fld1over'));
+});
+
+/* ---------- panels 2 and 3 ---------- */
+COMMS.forEach(function(c){
+  const p = document.createElement('div');
+  p.className = 'panel rail';
+  p.id = 'p' + c.n;
+  p.innerHTML =
+    '<div class="phead"><div><p class="pname">' + c.n + ' \u2014 ' + c.name + '</p>' +
+    '<p class="pto">' + c.to + '</p></div>' +
+    '<div style="display:flex;align-items:center;gap:8px">' +
+    '<span class="tally t-no" id="tal' + c.n + '">Hold</span>' +
+    '<button data-copy="' + c.n + '">Copy formatted</button></div></div>' +
+    '<div class="blocks" id="blk' + c.n + '"></div>' +
+    '<div class="grid2"><div><p class="col-h">This week</p>' +
+    '<div class="fields" id="fld' + c.n + '"></div></div>' +
+    '<div><p class="col-h">Ready to send</p>' +
+    '<p class="subline" id="sub' + c.n + '"></p>' +
+    '<div class="prev mail" id="out' + c.n + '"></div></div></div>' +
+    '<p class="miss" id="mis' + c.n + '"></p>';
+  document.getElementById('comms').appendChild(p);
+
+  const bh = document.getElementById('blk' + c.n);
+  c.blocks.forEach(function(b){
+    const t = document.createElement('button');
+    t.className = 'blk' + (b.on ? ' on' : '') + (b.locked ? ' locked' : '');
+    t.textContent = b.l;
+    t.setAttribute('aria-pressed', b.on ? 'true' : 'false');
+    t.addEventListener('click', function(){
+      ON[c.n][b.id] = !ON[c.n][b.id];
+      t.classList.toggle('on', ON[c.n][b.id]);
+      t.setAttribute('aria-pressed', ON[c.n][b.id] ? 'true' : 'false');
+      render();
+    });
+    bh.appendChild(t);
+  });
+
+  const fh = document.getElementById('fld' + c.n);
+  c.fields.forEach(function(f){ makeField({key:f.k, l:f.l, ph:f.ph, big:f.big}, fh); });
+
+  const h = document.createElement('p');
+  h.className = 'subhead';
+  h.textContent = 'Shared fields \u2014 blank uses the value up top';
+  fh.appendChild(h);
+  (c.over || []).forEach(function(k){
+    const s = SHAREDKEYS[k];
+    makeField({key:ov(c.n,k), l:s.l, ph:'', big:s.big, overrideOf:k}, fh);
+  });
+});
+
+/* ---------- output ---------- */
+
+function flagBody(f){
+  if (f.shared) return R(1, f.shared);
+  return val('fb_' + f.id);
+}
+function flagName(f){ return val('fn_' + f.id) || f.name; }
+
+function flagsText(){
+  const L = [];
+  L.push(val('f_greet') || '[Greeting]');
+  L.push('');
+  FLAGS.forEach(function(f){
+    if (!FON[f.id]) return;
+    const mark = FTRI[f.id] ? '\u{1F6A9}\u{1F6A9}\u{1F6A9}' : '\u{1F6A9}';
+    const body = flagBody(f) || '[' + flagName(f).toLowerCase() + ']';
+    L.push(mark + flagName(f) + ' - ' + fillTime(body) + '\n');
+  });
+  L.push(val('f_close') || '[Closing]');
+  return L.join('\n');
+}
+
+function bullet(label, body){ return '<li><b>' + label + ':</b> ' + body + '</li>'; }
+
+function prodHTML(){
+  const on = ON[2];
+  let h = '<p>' + nl2br(em(val('g_intro') || '[Opening line]')) + '</p><ul>';
+  if (on.es) h += bullet('English Set', em(R(2,'englishSet') || '[english set]'));
+  if (on.ss) h += bullet('Spanish Set', em(R(2,'spanishSet') || '[spanish set]'));
+  if (on.host) h += bullet('Hosting', 'CP\u2019s/hosts will have ' + em(R(2,'pastoral') || '[time]') + ' for the Pastoral Moment. ' + em(val('g_host') || '[hosting notes]'));
+  if (on.ew) h += bullet('English Worship', em(val('g_engWor') || '[english worship]'));
+  if (on.sp) h += bullet('Speaker', em(R(2,'speaker') || '[speaker]'));
+  if (on.me) h += bullet('English &amp; Spanish Message Ending', em(val('g_msgEnd') || '[message ending]'));
+  if (on.au) h += bullet('Audio for Ending', em(val('g_audio') || '[audio]'));
+  if (on.ts) h += '<li><b>Production Tech Support</b>: Just a reminder...we are dividing the on call tech load.<ul>' +
+    '<li>On Wednesdays, the first call with any issues will be to <b>' + em(val('g_wed') || '[name]') + '</b>.</li>' +
+    '<li>On Thursday nights for rehearsal, text both <b>' + em(val('g_thu') || '[names]') + '</b> in a group and whoever gets back to you first will assist!</li></ul></li>';
+  h += '</ul><p>' + nl2br(em(val('g_close') || '[Closing line]')) + '</p>';
+  return h;
+}
+
+function weekendHTML(){
+  const on = ON[3];
+  let intro = nl2br(em(val('w_intro') || '[Opening line]'));
+  intro = intro.replace(/cfmiami\.org\/pco/g, '<a href="http://cfmiami.org/pco">cfmiami.org/pco</a>');
+  let h = '<p>' + intro + '</p><ul>';
+  if (on.es) h += bullet('English Set', em(R(3,'englishSet') || '[english set]'));
+  if (on.ss) h += bullet('Spanish Set', em(R(3,'spanishSet') || '[spanish set]'));
+  if (on.gen) h += bullet('Generosity', em(val('w_gen') || '[generosity]'));
+  if (on.ann) h += bullet('Announcement', em(val('w_ann') || '[announcement]'));
+  if (on.em) h += bullet('English Middle Song', em(val('w_engMid') || '[song]'));
+  if (on.sm) h += bullet('Spanish Middle Song', em(val('w_spaMid') || '[song]'));
+  if (on.sp) h += bullet('Speaker', em(R(3,'speaker') || '[speaker]'));
+  if (on.msg) h += '<li><b>Message Title // Passage // Blurb:</b> ' + em(val('w_title') || '[title]') + ' //<br>' +
+    em(val('w_pass') || '[passage]') + ' // ' + nl2br(em(val('w_blurb') || '[blurb]')) + '</li>';
+  if (on.dis) h += bullet('Dismissal', em(R(3,'dismissal') || '[dismissal]'));
+  h += '</ul><p>' + nl2br(em(val('w_close') || '[Closing line]')) + '</p>';
+  return h;
+}
+
+function htmlToPlain(html){
+  const d = document.createElement('div');
+  d.innerHTML = html.replace(/<li>/g, '<li>* ').replace(/<br>/g, '\n').replace(/<\/li>/g, '</li>\n').replace(/<\/p>/g, '</p>\n\n');
+  return (d.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function render(){
+  let allOk = true;
+
+  /* flags */
+  document.getElementById('out1').textContent = flagsText();
+  const fmiss = [];
+  FLAGS.forEach(function(f){
+    const row = document.querySelector('.flagrow[data-fid="' + f.id + '"]');
+    const bad = FON[f.id] && !flagBody(f);
+    if (row){
+      row.classList.toggle('off', !FON[f.id]);
+      row.classList.toggle('needs', !!bad);
+      const picks = row.querySelector('.picks');
+      if (picks){
+        const cur = val('fb_' + f.id);
+        const bs = picks.querySelectorAll('.pick');
+        for (let j = 0; j < bs.length; j++){
+          bs[j].classList.toggle('sel', bs[j].dataset.text.trim() === cur && cur !== '');
+        }
+      }
+    }
+    if (bad) fmiss.push(flagName(f));
+  });
+  if (!val('f_greet')) fmiss.push('Greeting');
+  if (!val('f_close')) fmiss.push('Closing');
+  if (FON.pm && /\{\{\s*time\s*\}\}/.test(val('fb_pm')) && !R(1,'pastoral')) fmiss.push('Pastoral moment time');
+
+  const p1e = document.getElementById('p1');
+  const t1 = document.getElementById('tal1');
+  const m1 = document.getElementById('mis1');
+  if (fmiss.length){
+    allOk = false;
+    p1e.classList.add('hold'); p1e.classList.remove('ready');
+    t1.className = 'tally t-no'; t1.textContent = 'Hold';
+    m1.textContent = 'Missing: ' + fmiss.join(' \u00b7 ');
+  } else {
+    p1e.classList.add('ready'); p1e.classList.remove('hold');
+    t1.className = 'tally t-ok'; t1.textContent = 'Ready';
+    m1.textContent = '';
+  }
+
+  /* emails */
+  COMMS.forEach(function(c){
+    const need = {};
+    Object.keys(c.needs).forEach(function(b){
+      if (ON[c.n][b]) c.needs[b].forEach(function(k){ need[k] = 1; });
+    });
+    (c.always || []).forEach(function(k){ need[k] = 1; });
+    const missing = Object.keys(need).filter(function(k){ return !R(c.n, k); });
+
+    document.getElementById('out' + c.n).innerHTML = c.n === 2 ? prodHTML() : weekendHTML();
+    document.getElementById('sub' + c.n).textContent = 'Subject: ' + c.subject();
+
+    const p = document.getElementById('p' + c.n);
+    const t = document.getElementById('tal' + c.n);
+    const m = document.getElementById('mis' + c.n);
+    if (missing.length){
+      allOk = false;
+      p.classList.add('hold'); p.classList.remove('ready');
+      t.className = 'tally t-no'; t.textContent = 'Hold';
+      m.textContent = 'Missing: ' + missing.map(function(k){ return LABELS[k] || k; }).join(' \u00b7 ');
+    } else {
+      p.classList.add('ready'); p.classList.remove('hold');
+      t.className = 'tally t-ok'; t.textContent = 'Ready';
+      m.textContent = '';
+    }
+  });
+
+  const labs = document.querySelectorAll('label.f');
+  for (let i = 0; i < labs.length; i++){
+    const lab = labs[i];
+    const k = lab.dataset.k;
+    const src = lab.dataset.src;
+    if (src){
+      const custom = !!val(k);
+      lab.classList.toggle('custom', custom);
+      lab.classList.remove('missing');
+      const st = lab.querySelector('.state');
+      if (st){
+        st.textContent = custom ? 'custom' : 'shared';
+        st.classList.toggle('is-custom', custom);
+      }
+      const el = lab.querySelector('input,textarea');
+      if (el && !custom) el.placeholder = val(src) || '\u2014';
+    } else {
+      lab.classList.toggle('missing', !val(k));
+    }
+  }
+
+  const ms = document.getElementById('master');
+  if (allOk){ ms.className = 'master m-ok'; ms.textContent = 'All three ready'; }
+  else { ms.className = 'master m-no'; ms.textContent = 'Hold \u2014 fields missing'; }
+}
+
+/* ---------- copy ---------- */
+function flash(btn){
+  const o = btn.textContent;
+  btn.textContent = 'Copied';
+  setTimeout(function(){ btn.textContent = o; }, 1500);
+}
+function legacyPlain(text, btn){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); flash(btn); } catch(e){}
+  document.body.removeChild(ta);
+}
+function copyPlain(text, btn){
+  if (navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(function(){ flash(btn); }, function(){ legacyPlain(text, btn); });
+  } else legacyPlain(text, btn);
+}
+function legacyRich(html, btn){
+  const d = document.createElement('div');
+  d.contentEditable = 'true';
+  d.innerHTML = html;
+  d.style.position = 'fixed'; d.style.left = '-9999px'; d.style.top = '0';
+  document.body.appendChild(d);
+  const r = document.createRange(); r.selectNodeContents(d);
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  try { document.execCommand('copy'); flash(btn); } catch(e){}
+  s.removeAllRanges();
+  document.body.removeChild(d);
+}
+function copyRich(html, text, btn){
+  if (navigator.clipboard && window.ClipboardItem && window.isSecureContext){
+    try {
+      const item = new ClipboardItem({
+        'text/html': new Blob([html], {type:'text/html'}),
+        'text/plain': new Blob([text], {type:'text/plain'})
+      });
+      navigator.clipboard.write([item]).then(function(){ flash(btn); }, function(){ legacyRich(html, btn); });
+      return;
+    } catch(e){}
+  }
+  legacyRich(html, btn);
+}
+document.addEventListener('click', function(e){
+  const b = e.target.closest('[data-copy]');
+  if (!b) return;
+  const n = +b.dataset.copy;
+  if (n === 1){ copyPlain(flagsText(), b); return; }
+  const html = n === 2 ? prodHTML() : weekendHTML();
+  copyRich(html, htmlToPlain(html), b);
+});
+
+/* ---------- example week ---------- */
+const DEMO = {
+  f_greet:'Good Afternoon Pastors, Here are the flags for this Sunday:',
+  f_close:'Email has been sent and includes the verbiage. If you\u2019ve got any Qs, hit me up! \n\n- E$',
+  fb_cw:'\u201cDuring\u201d the countdown, hosts will come up and lead a call to worship and pray as the band plays behind them.',
+  g_intro:'Hey Team, here\u2019s the flow for the weekend:',
+  g_close:'Attached are both PDF masterflows. If you have any questions or issues, feel free to reach out to me at any time! Have a great weekend!',
+  w_intro:'Hey Team, below are some details and attached are the master flows. Any updates to the master flows can be found at cfmiami.org/pco and on the Planning Center Online app.',
+  w_close:'Let\u2019s Go!'
+};
+
+function setAll(obj){
+  Object.keys(V).forEach(function(k){ delete V[k]; });
+  Object.keys(obj).forEach(function(k){ V[k] = obj[k]; });
+  const els = document.querySelectorAll('[data-k]');
+  for (let i = 0; i < els.length; i++){
+    const el = els[i];
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = V[el.dataset.k] || '';
+  }
+  render();
+}
+
+document.getElementById('clear').addEventListener('click', function(){ setAll({}); });
+document.getElementById('demo').addEventListener('click', function(){ setAll(DEMO); });
+
+setAll(DEMO);
+</script>
+</body>
+</html>
